@@ -2,350 +2,184 @@
 <html lang="fr">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Application Logistique SIAG - Rapport Académique</title>
+    <title>SIAG - Gestion de Stock & Logistique</title>
     <style>
-        :root {
-            --primary: #1a2a6c; --secondary: #2c3e50; --accent: #f39c12;
-            --success: #27ae60; --danger: #c0392b; --light: #f8f9fa;
-        }
-        body { font-family: 'Helvetica Neue', Arial, sans-serif; margin: 0; background: #eaeff2; color: #333; }
-        header { background: var(--primary); color: white; padding: 15px 30px; display: flex; justify-content: space-between; align-items: center; border-bottom: 4px solid var(--accent); }
-        nav { background: var(--secondary); display: flex; position: sticky; top: 0; z-index: 100; box-shadow: 0 2px 5px rgba(0,0,0,0.2); }
-        nav button { background: none; border: none; color: #bdc3c7; padding: 15px 25px; cursor: pointer; font-weight: bold; transition: 0.2s; border-right: 1px solid #3e4f5f; }
-        nav button:hover, nav button.active { background: #3e4f5f; color: white; }
-        
-        .container { padding: 30px; max-width: 1300px; margin: auto; }
-        .card { background: white; padding: 25px; border-radius: 5px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); margin-bottom: 25px; border-top: 3px solid var(--primary); }
+        :root { --p: #2c3e50; --s: #34495e; --a: #3498db; --ok: #27ae60; --err: #e74c3c; }
+        body { font-family: sans-serif; margin: 0; background: #f4f4f4; }
+        header { background: var(--p); color: white; padding: 1rem; display: flex; justify-content: space-between; }
+        nav { background: var(--s); display: flex; }
+        nav button { color: white; border: none; padding: 15px; cursor: pointer; background: none; }
+        nav button.active { background: var(--a); }
+        .container { padding: 20px; max-width: 1100px; margin: auto; }
+        .card { background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); margin-bottom: 20px; }
         section { display: none; }
-        section.active { display: block; animation: fadeIn 0.3s; }
-        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
-
-        table { width: 100%; border-collapse: collapse; margin-top: 15px; font-size: 0.9em; }
-        th, td { border: 1px solid #dee2e6; padding: 12px; text-align: left; }
-        th { background: #f1f4f6; color: var(--secondary); text-transform: uppercase; letter-spacing: 1px; }
-        tr:nth-child(even) { background: #fdfdfd; }
-        .status-ok { color: var(--success); font-weight: bold; border-left: 4px solid var(--success); padding-left: 8px; }
-        .status-reorder { color: var(--danger); font-weight: bold; border-left: 4px solid var(--danger); padding-left: 8px; }
-
-        .grid-dashboard { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 20px; margin-bottom: 30px; }
-        .kpi-card { padding: 20px; border-radius: 4px; color: white; position: relative; }
-        .kpi-card h4 { margin: 0; font-size: 0.8em; opacity: 0.9; text-transform: uppercase; }
-        .kpi-card div { font-size: 2em; font-weight: bold; margin-top: 5px; }
-
-        /* Swimlanes SIAG */
-        .swimlane-v2 { display: grid; grid-template-columns: 150px 1fr; border: 1px solid #ccc; margin-top: 20px; }
-        .lane-header { background: var(--secondary); color: white; padding: 15px; display: flex; align-items: center; justify-content: center; font-weight: bold; text-align: center; border-bottom: 1px solid #444; }
-        .lane-body { background: white; padding: 15px; display: flex; gap: 20px; align-items: center; border-bottom: 1px solid #eee; overflow-x: auto; }
-        .step { background: #fff; border: 2px solid var(--primary); padding: 10px; border-radius: 4px; font-size: 0.85em; min-width: 140px; text-align: center; position: relative; }
-        .step::after { content: '→'; position: absolute; right: -15px; top: 50%; transform: translateY(-50%); font-weight: bold; color: var(--primary); }
-        .step:last-child::after { content: ''; }
-
-        input, select { padding: 10px; border: 1px solid #ced4da; border-radius: 4px; margin-bottom: 10px; width: 100%; box-sizing: border-box; }
-        button.btn-action { background: var(--primary); color: white; border: none; padding: 10px 20px; border-radius: 4px; cursor: pointer; transition: background 0.2s; }
-        button.btn-action:hover { background: var(--secondary); }
-        .log-terminal { background: #1e1e1e; color: #00ff00; padding: 15px; font-family: 'Courier New', monospace; height: 120px; overflow-y: auto; border-radius: 4px; border: 2px solid #333; }
+        section.active { display: block; }
+        table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+        th, td { border: 1px solid #ddd; padding: 10px; text-align: left; }
+        th { background: #eee; }
+        .badge-err { color: var(--err); font-weight: bold; }
+        .badge-ok { color: var(--ok); font-weight: bold; }
+        input { width: 100%; padding: 8px; margin: 5px 0; box-sizing: border-box; }
+        .btn-go { background: var(--a); color: white; border: none; padding: 10px; cursor: pointer; width: 100%; }
     </style>
 </head>
 <body>
 
 <header>
-    <div><strong>PORTAIL LOGISTIQUE</strong> | Dossier SIAG v2.0</div>
-    <div id="clock"></div>
+    <strong>TABLEAU DE BORD SIAG</strong>
+    <span id="date"></span>
 </header>
 
 <nav>
-    <button onclick="openTab('art-tab')" id="nav-art" class="active">GESTION ARTICLES</button>
-    <button onclick="openTab('proc-tab')">MODÉLISATION PROCESSUS</button>
-    <button onclick="openTab('dash-tab')">PILOTAGE & TRS</button>
-    <button onclick="openTab('appro-tab')">APPROVISIONNEMENT</button>
+    <button onclick="tab('art')" id="b-art" class="active">ARTICLES & BNMP</button>
+    <button onclick="tab('trs')">PERFORMANCE & TRS</button>
+    <button onclick="tab('appro')">APPROVISIONNEMENT</button>
 </nav>
 
 <div class="container">
 
-    <section id="art-tab" class="active">
-        <div style="display: grid; grid-template-columns: 350px 1fr; gap: 30px;">
+    <section id="art" class="active">
+        <div style="display: grid; grid-template-columns: 300px 1fr; gap: 20px;">
             <div class="card">
-                <h3>Saisie Article</h3>
-                <input type="hidden" id="f-id">
-                <label>SKU</label><input type="text" id="f-sku" placeholder="ex: MAT-4500">
-                <label>Stock Physique</label><input type="number" id="f-phys" value="0">
-                <label>En Transit</label><input type="number" id="f-trans" value="0">
-                <label>Réservé (Client/Prod)</label><input type="number" id="f-res" value="0">
-                <label>Seuil de Sécurité</label><input type="number" id="f-min" value="0">
-                <button class="btn-action" onclick="handleArticleSubmit()">Enregistrer l'Article</button>
-                <button onclick="resetForm()" style="margin-top:10px; background:none; border:none; cursor:pointer; color:gray;">Annuler</button>
+                <h3>Ajouter / Modifier</h3>
+                <input type="text" id="in-sku" placeholder="SKU">
+                <input type="number" id="in-phys" placeholder="Stock Physique">
+                <input type="number" id="in-trans" placeholder="En Transit">
+                <input type="number" id="in-res" placeholder="Réservé">
+                <input type="number" id="in-min" placeholder="Seuil Min">
+                <button class="btn-go" onclick="save()">Enregistrer</button>
             </div>
             <div class="card">
-                <h3>Vue d'Inventaire (Besoin Net)</h3>
-                <table id="art-table">
+                <h3>Inventaire Temps Réel</h3>
+                <table>
                     <thead>
-                        <tr>
-                            <th>SKU</th>
-                            <th>Physique</th>
-                            <th>Transit</th>
-                            <th>Réservé</th>
-                            <th>Net (BNMP)</th>
-                            <th>Seuil</th>
-                            <th>État</th>
-                            <th>Actions</th>
-                        </tr>
+                        <tr><th>SKU</th><th>Phys</th><th>Transit</th><th>Réservé</th><th>NET</th><th>Seuil</th><th>Statut</th></tr>
                     </thead>
-                    <tbody id="art-tbody"></tbody>
+                    <tbody id="tbody"></tbody>
                 </table>
             </div>
         </div>
     </section>
 
-    <section id="proc-tab">
+    <section id="trs">
         <div class="card">
-            <h3>Modélisation SIAG : Flux de Réapprovisionnement (TO-BE)</h3>
-            <div class="swimlane-v2">
-                <div class="lane-header">Magasinier</div>
-                <div class="lane-body">
-                    <div class="step">Réception Scan</div>
-                    <div class="step">Mise en stock</div>
-                    <div class="step">Préparation commande</div>
+            <h3>Calculateur TRS Académique</h3>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+                <div>
+                    <label>Temps Planifié (min)</label><input type="number" id="t1" value="480">
+                    <label>Arrêts (min)</label><input type="number" id="t2" value="40">
+                    <label>Cadence (pcs/h)</label><input type="number" id="t3" value="100">
+                    <label>Total Produit</label><input type="number" id="t4" value="700">
+                    <label>Mauvais</label><input type="number" id="t5" value="10">
+                    <button class="btn-go" onclick="calcTRS()" style="margin-top:10px">Analyser</button>
                 </div>
-                <div class="lane-header">Système (ERP)</div>
-                <div class="lane-body">
-                    <div class="step">Calcul BNMP auto</div>
-                    <div class="step">Vérification Seuil</div>
-                    <div class="step">Alerte Rupture</div>
-                    <div class="step">Génération Draft PO</div>
-                </div>
-                <div class="lane-header">Acheteur</div>
-                <div class="lane-body">
-                    <div class="step">Revue du Brouillon</div>
-                    <div class="step">Validation Fournisseur</div>
+                <div id="res-trs" style="background:#f9f9f9; padding:15px; border-radius:5px;">
+                    Résultats TRS s'afficheront ici.
                 </div>
             </div>
         </div>
     </section>
 
-    <section id="dash-tab">
-        <div class="grid-dashboard">
-            <div class="kpi-card" style="background: #3498db;"><h4>Taux de Service</h4><div id="kpi-svc">0%</div></div>
-            <div class="kpi-card" style="background: #e67e22;"><h4>Ruptures Identifiées</h4><div id="kpi-rupt">0</div></div>
-            <div class="kpi-card" style="background: #27ae60;"><h4>Valeur Stockée</h4><div id="kpi-val">0 €</div></div>
+    <section id="appro">
+        <div class="card">
+            <h3>Brouillons de Commandes (PO Drafts)</h3>
+            <table id="t-draft">
+                <thead><tr><th>Date</th><th>SKU</th><th>Besoin</th><th>Action</th></tr></thead>
+                <tbody id="tbody-draft"></tbody>
+            </table>
         </div>
-
-        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 30px;">
-            <div class="card">
-                <h3>Calculateur TRS (Efficience Ligne)</h3>
-                <div style="font-size: 0.85em; margin-bottom:15px; color:#666;">Outil pédagogique pour analyser la performance de production.</div>
-                <label>Temps d'ouverture (min)</label><input type="number" id="t-ouv" value="480">
-                <label>Temps d'arrêts (min)</label><input type="number" id="t-arr" value="45">
-                <label>Quantité Totale (pcs)</label><input type="number" id="t-tot" value="1000">
-                <label>Rebuts / Non-conformes</label><input type="number" id="t-reb" value="15">
-                <label>Cadence Idéale (pcs/min)</label><input type="number" id="t-cad" value="2.5">
-                <button class="btn-action" onclick="runTRS()">Calculer la Performance</button>
-                <div id="trs-out" style="margin-top:20px; padding:15px; background:var(--light); border-radius:4px;"></div>
-            </div>
-            <div class="card">
-                <h3>Optimisation (Wilson / ABC)</h3>
-                <div style="background:var(--light); padding:15px; border-left:5px solid var(--accent);">
-                    <strong>Formule EOQ :</strong> $Q = \sqrt{2DS/H}$
-                </div>
-                <label style="margin-top:15px; display:block;">Consommation annuelle (D)</label><input type="number" id="w-d" value="12000">
-                <label>Coût de commande (S)</label><input type="number" id="w-s" value="40">
-                <label>Coût de possession (H)</label><input type="number" id="w-h" value="3.5">
-                <button class="btn-action" onclick="runWilson()">Optimiser la commande</button>
-                <h4 id="wilson-out" style="color:var(--primary); font-size: 1.4em;"></h4>
-            </div>
-        </div>
-    </section>
-
-    <section id="appro-tab">
-        <div style="display: grid; grid-template-columns: 1fr 400px; gap: 30px;">
-            <div class="card">
-                <h3>Brouillons de Commandes (PO Drafts)</h3>
-                <table id="draft-table">
-                    <thead>
-                        <tr><th>Date</th><th>SKU</th><th>Quantité Suggérée</th><th>Action</th></tr>
-                    </thead>
-                    <tbody id="draft-tbody"></tbody>
-                </table>
-            </div>
-            <div class="card">
-                <h3>Commandes Fermes (PO)</h3>
-                <div id="po-list"></div>
-            </div>
-        </div>
-        <div class="card" style="border-top: 3px solid #333;">
-            <h3>Journal de Traçabilité & Garde-fous</h3>
-            <div class="log-terminal" id="log-term"></div>
+        <div class="card">
+            <h3>Journal de Traçabilité</h3>
+            <div id="logs" style="font-family: monospace; font-size: 0.8em; color: #555;"></div>
         </div>
     </section>
 
 </div>
 
 <script>
-    // --- JEU DE DONNÉES BASÉ SUR LES SKU FOURNIS ---
-    let db = [
-        {sku: "PNEU-V15", phys: 45, trans: 20, res: 10, min: 80, prix: 65, conso: 12},
-        {sku: "JANTE-ALU-17", phys: 120, trans: 0, res: 5, min: 50, prix: 140, conso: 4},
-        {sku: "VALVE-TR414", phys: 300, trans: 100, res: 50, min: 500, prix: 2.5, conso: 80},
-        {sku: "HUILE-5W30", phys: 12, trans: 24, res: 8, min: 20, prix: 35, conso: 5}
+    // --- JEU DE DONNÉES DES SKU ---
+    let data = [
+        {sku: "PNEU-V15", phys: 45, trans: 20, res: 10, min: 80},
+        {sku: "JANTE-ALU-17", phys: 120, trans: 0, res: 5, min: 50},
+        {sku: "VALVE-TR414", phys: 300, trans: 100, res: 50, min: 500},
+        {sku: "HUILE-5W30", phys: 12, trans: 24, res: 8, min: 20}
     ];
-    let pos = [];
 
-    // --- MOTEUR DE NAVIGATION ---
-    function openTab(id) {
+    function tab(id) {
         document.querySelectorAll('section').forEach(s => s.classList.remove('active'));
         document.querySelectorAll('nav button').forEach(b => b.classList.remove('active'));
         document.getElementById(id).classList.add('active');
-        refreshAll();
+        render();
     }
 
-    // --- LOGIQUE ARTICLES (EX 1) ---
-    function refreshAll() {
-        renderArticles();
-        renderDrafts();
-        updateKpis();
-    }
-
-    function renderArticles() {
-        const tbody = document.getElementById('art-tbody');
-        tbody.innerHTML = '';
-        db.forEach((a, i) => {
+    function render() {
+        // Table Articles
+        const tb = document.getElementById('tbody');
+        tb.innerHTML = '';
+        data.forEach(a => {
             const net = a.phys + a.trans - a.res;
-            const statusClass = net < a.min ? 'status-reorder' : 'status-ok';
-            const statusTxt = net < a.min ? 'À COMMANDER' : 'OK';
-            tbody.innerHTML += `
-                <tr>
-                    <td>${a.sku}</td>
-                    <td>${a.phys}</td>
-                    <td>${a.trans}</td>
-                    <td>${a.res}</td>
-                    <td><strong>${net}</strong></td>
-                    <td>${a.min}</td>
-                    <td class="${statusClass}">${statusTxt}</td>
-                    <td>
-                        <button onclick="loadArt(${i})">Edit</button>
-                        <button onclick="delArt(${i})" style="color:red">X</button>
-                    </td>
-                </tr>
-            `;
+            const status = net < a.min ? '<span class="badge-err">RECOMMANDE</span>' : '<span class="badge-ok">OK</span>';
+            tb.innerHTML += `<tr><td>${a.sku}</td><td>${a.phys}</td><td>${a.trans}</td><td>${a.res}</td><td>${net}</td><td>${a.min}</td><td>${status}</td></tr>`;
+        });
+
+        // Table Appro
+        const tbd = document.getElementById('tbody-draft');
+        tbd.innerHTML = '';
+        data.forEach(a => {
+            const net = a.phys + a.trans - a.res;
+            if(net < a.min) {
+                tbd.innerHTML += `<tr><td>${new Date().toLocaleDateString()}</td><td>${a.sku}</td><td>${a.min - net}</td><td><button onclick="logPo('${a.sku}')">Confirmer PO</button></td></tr>`;
+            }
         });
     }
 
-    function handleArticleSubmit() {
-        const idx = document.getElementById('f-id').value;
-        const article = {
-            sku: document.getElementById('f-sku').value,
-            phys: parseInt(document.getElementById('f-phys').value),
-            trans: parseInt(document.getElementById('f-trans').value),
-            res: parseInt(document.getElementById('f-res').value),
-            min: parseInt(document.getElementById('f-min').value),
-            prix: 50, conso: 5
+    function save() {
+        const a = {
+            sku: document.getElementById('in-sku').value,
+            phys: parseInt(document.getElementById('in-phys').value) || 0,
+            trans: parseInt(document.getElementById('in-trans').value) || 0,
+            res: parseInt(document.getElementById('in-res').value) || 0,
+            min: parseInt(document.getElementById('in-min').value) || 0
         };
-        if(idx === "") db.push(article); else db[idx] = article;
-        addLog(`Article ${article.sku} sauvegardé dans le référentiel.`);
-        resetForm();
-        refreshAll();
+        data.push(a);
+        render();
+        log(`Nouvel article ajouté : ${a.sku}`);
     }
 
-    function loadArt(i) {
-        const a = db[i];
-        document.getElementById('f-id').value = i;
-        document.getElementById('f-sku').value = a.sku;
-        document.getElementById('f-phys').value = a.phys;
-        document.getElementById('f-trans').value = a.trans;
-        document.getElementById('f-res').value = a.res;
-        document.getElementById('f-min').value = a.min;
-    }
+    function calcTRS() {
+        const plan = parseFloat(document.getElementById('t1').value);
+        const arr = parseFloat(document.getElementById('t2').value);
+        const cadH = parseFloat(document.getElementById('t3').value);
+        const tot = parseFloat(document.getElementById('t4').value);
+        const mauv = parseFloat(document.getElementById('t5').value);
 
-    function delArt(i) { db.splice(i, 1); refreshAll(); }
-    function resetForm() { document.querySelectorAll('input').forEach(i => i.value = (i.type==='number' ? 0 : '')); }
+        const d = (plan - arr) / plan;
+        const p = (tot / ((plan - arr) / 60)) / cadH;
+        const q = (tot - mauv) / tot;
+        const trs = d * p * q * 100;
 
-    // --- LOGIQUE DASHBOARD & TRS (EX 2) ---
-    function updateKpis() {
-        const ruptures = db.filter(a => (a.phys + a.trans - a.res) < a.min).length;
-        const totalVal = db.reduce((s, a) => s + (a.phys * a.prix), 0);
-        const svc = ((db.length - ruptures) / db.length * 100).toFixed(1);
-        
-        document.getElementById('kpi-rupt').innerText = ruptures;
-        document.getElementById('kpi-val').innerText = totalVal.toLocaleString() + ' €';
-        document.getElementById('kpi-svc').innerText = svc + '%';
-    }
-
-    function runTRS() {
-        const TO = parseFloat(document.getElementById('t-ouv').value);
-        const TA = parseFloat(document.getElementById('t-arr').value);
-        const QT = parseFloat(document.getElementById('t-tot').value);
-        const QR = parseFloat(document.getElementById('t-reb').value);
-        const CI = parseFloat(document.getElementById('t-cad').value);
-
-        const dispo = (TO - TA) / TO;
-        const perf = (QT / (TO - TA)) / CI;
-        const qual = (QT - QR) / QT;
-        const trs = dispo * perf * qual * 100;
-
-        let focus = trs < 80 ? (dispo < 0.9 ? "Axe : Disponibilité (pannes)" : (perf < 0.9 ? "Axe : Performance (micro-arrêts)" : "Axe : Qualité (rebuts)")) : "Performance Excellente";
-
-        document.getElementById('trs-out').innerHTML = `
-            <strong>TRS Global : ${trs.toFixed(1)}%</strong><br>
-            <small>D: ${(dispo*100).toFixed(1)}% | P: ${(perf*100).toFixed(1)}% | Q: ${(qual*100).toFixed(1)}%</small><br>
-            <p style="color:var(--primary); font-weight:bold;">${focus}</p>
+        document.getElementById('res-trs').innerHTML = `
+            <strong>TRS : ${trs.toFixed(1)}%</strong><hr>
+            Dispo : ${(d*100).toFixed(1)}%<br>
+            Perf : ${(p*100).toFixed(1)}%<br>
+            Qualité : ${(q*100).toFixed(1)}%<br>
+            <em>${trs < 75 ? "Analyse : Performance à surveiller" : "Analyse : Conforme"}</em>
         `;
     }
 
-    function runWilson() {
-        const D = parseFloat(document.getElementById('w-d').value);
-        const S = parseFloat(document.getElementById('w-s').value);
-        const H = parseFloat(document.getElementById('w-h').value);
-        const q = Math.sqrt((2 * D * S) / H);
-        document.getElementById('wilson-out').innerText = `Quantité Wilson : ${Math.round(q)} unités`;
+    function logPo(sku) {
+        log(`COMMANDE FERME : PO-${Math.floor(Math.random()*1000)} pour ${sku} générée.`);
+        alert("Bon de commande généré avec succès.");
     }
 
-    // --- LOGIQUE APPRO (EX 3) ---
-    function renderDrafts() {
-        const tbody = document.getElementById('draft-tbody');
-        tbody.innerHTML = '';
-        db.filter(a => (a.phys + a.trans - a.res) < a.min).forEach(a => {
-            const qteSug = a.min - (a.phys + a.trans - a.res);
-            tbody.innerHTML += `
-                <tr>
-                    <td>${new Date().toLocaleDateString()}</td>
-                    <td>${a.sku}</td>
-                    <td><strong>${qteSug}</strong></td>
-                    <td><button class="btn-action" onclick="createPO('${a.sku}', ${qteSug})">Confirmer PO</button></td>
-                </tr>
-            `;
-        });
+    function log(msg) {
+        document.getElementById('logs').innerHTML = `[${new Date().toLocaleTimeString()}] ${msg}<br>` + document.getElementById('logs').innerHTML;
     }
 
-    function createPO(sku, qte) {
-        // Garde-fou anti-doublon
-        if(pos.some(p => p.sku === sku && p.statut === 'Transmis')) {
-            alert("ALERTE : Une commande est déjà active pour cet article. Doublon bloqué.");
-            return;
-        }
-        const id = "PO-" + Math.floor(1000 + Math.random() * 9000);
-        pos.push({id, sku, qte, statut: 'Transmis'});
-        addLog(`COMMANDE FERME : ${id} générée pour ${sku} (Qté: ${qte}).`);
-        renderDrafts();
-        renderPOList();
-    }
-
-    function renderPOList() {
-        document.getElementById('po-list').innerHTML = pos.map(p => `
-            <div style="padding:10px; border-bottom:1px solid #eee; font-size:0.9em;">
-                <b>${p.id}</b> | ${p.sku} | <span style="color:var(--success)">${p.statut}</span>
-            </div>
-        `).reverse().join('');
-    }
-
-    function addLog(msg) {
-        const time = new Date().toLocaleTimeString();
-        const log = document.getElementById('log-term');
-        log.innerHTML = `> [${time}] ${msg}<br>` + log.innerHTML;
-    }
-
-    // Init
-    setInterval(() => { document.getElementById('clock').innerText = new Date().toLocaleString(); }, 1000);
-    window.onload = refreshAll;
+    window.onload = () => {
+        document.getElementById('date').innerText = new Date().toLocaleDateString();
+        render();
+    };
 </script>
 
 </body>
